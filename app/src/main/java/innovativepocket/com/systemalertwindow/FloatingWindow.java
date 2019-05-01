@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.IBinder;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -14,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -23,6 +25,7 @@ public class FloatingWindow extends Service {
     private Context mContext;
     private WindowManager mWindowManager;
     private View mView;
+    EditText edt1;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -55,6 +58,7 @@ public class FloatingWindow extends Service {
     }
 
     WindowManager.LayoutParams mWindowsParams;
+
     private void moveView() {
         DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
         int width = (int) (metrics.widthPixels * 0.7f);
@@ -64,20 +68,21 @@ public class FloatingWindow extends Service {
                 width,//WindowManager.LayoutParams.WRAP_CONTENT,
                 height,//WindowManager.LayoutParams.WRAP_CONTENT,
                 //WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-                
+
                 (Build.VERSION.SDK_INT <= 25) ? WindowManager.LayoutParams.TYPE_PHONE : WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                 ,
-            
+
                 //WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH, // Not displaying keyboard on bg activity's EditText
                 //WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, //Not work with EditText on keyboard
                 PixelFormat.TRANSLUCENT);
 
-
+        //mWindowsParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE;
         mWindowsParams.gravity = Gravity.TOP | Gravity.LEFT;
         //params.x = 0;
         mWindowsParams.y = 100;
         mWindowManager.addView(mView, mWindowsParams);
+
 
         mView.setOnTouchListener(new View.OnTouchListener() {
             private int initialX;
@@ -86,11 +91,12 @@ public class FloatingWindow extends Service {
             private float initialTouchY;
 
             long startTime = System.currentTimeMillis();
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if (System.currentTimeMillis() - startTime <= 300) {
-                    return false;
-                }
+//                if (System.currentTimeMillis() - startTime <= 300) {
+//                    return false;
+//                }
                 if (isViewInBounds(mView, (int) (event.getRawX()), (int) (event.getRawY()))) {
                     editTextReceiveFocus();
                 } else {
@@ -129,6 +135,7 @@ public class FloatingWindow extends Service {
     private void editTextReceiveFocus() {
         if (!wasInFocus) {
             mWindowsParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+            //   mWindowsParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE;
             mWindowManager.updateViewLayout(mView, mWindowsParams);
             wasInFocus = true;
         }
@@ -137,24 +144,31 @@ public class FloatingWindow extends Service {
     private void editTextDontReceiveFocus() {
         if (wasInFocus) {
             mWindowsParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+            //  mWindowsParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN;
             mWindowManager.updateViewLayout(mView, mWindowsParams);
             wasInFocus = false;
         }
     }
 
     private boolean wasInFocus = true;
+
     private void allAboutLayout(Intent intent) {
 
         LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mView = layoutInflater.inflate(R.layout.ovelay_window, null);
 
-        final EditText edt1 = (EditText) mView.findViewById(R.id.edt1);
+        edt1 = (EditText) mView.findViewById(R.id.edt1);
         final TextView tvValue = (TextView) mView.findViewById(R.id.tvValue);
         Button btnClose = (Button) mView.findViewById(R.id.btnClose);
 
-        edt1.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+        edt1.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onFocusChange(View view, boolean b) {
+            public void onClick(View v) {
+                mWindowsParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+                mWindowsParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE;
+                mWindowManager.updateViewLayout(mView, mWindowsParams);
+                wasInFocus = true;
+                showSoftKeyboard(v);
 
             }
         });
@@ -183,6 +197,22 @@ public class FloatingWindow extends Service {
             }
         });
 
+    }
+
+
+    private void hideKeyboard(Context context, View view) {
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+    public void showSoftKeyboard(View view) {
+        if (view.requestFocus()) {
+            InputMethodManager imm = (InputMethodManager)
+                    getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+        }
     }
 
 
