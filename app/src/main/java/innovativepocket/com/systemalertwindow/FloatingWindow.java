@@ -1,5 +1,7 @@
 package innovativepocket.com.systemalertwindow;
 
+import android.os.Build;
+import android.view.inputmethod.InputMethodManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -139,25 +141,31 @@ public class FloatingWindow extends Service {
             mWindowsParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
             mWindowManager.updateViewLayout(mView, mWindowsParams);
             wasInFocus = false;
+            hideKeyboard(mContext, edt1);
         }
     }
 
     private boolean wasInFocus = true;
+    private EditText edt1;
     private void allAboutLayout(Intent intent) {
 
         LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mView = layoutInflater.inflate(R.layout.ovelay_window, null);
 
-        final EditText edt1 = (EditText) mView.findViewById(R.id.edt1);
+        edt1 = (EditText) mView.findViewById(R.id.edt1);
         final TextView tvValue = (TextView) mView.findViewById(R.id.tvValue);
         Button btnClose = (Button) mView.findViewById(R.id.btnClose);
 
-        edt1.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View view, boolean b) {
-
-            }
-        });
+        edt1.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mWindowsParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+            mWindowsParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE;
+            mWindowManager.updateViewLayout(mView, mWindowsParams);
+            wasInFocus = true;
+            showSoftKeyboard(v);
+        }
+    });
 
         edt1.addTextChangedListener(new TextWatcher() {
             @Override
@@ -185,5 +193,20 @@ public class FloatingWindow extends Service {
 
     }
 
+    
+    private void hideKeyboard(Context context, View view) {
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+    public void showSoftKeyboard(View view) {
+        if (view.requestFocus()) {
+            InputMethodManager imm = (InputMethodManager)
+                    getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+        }
+    }
 
 }
