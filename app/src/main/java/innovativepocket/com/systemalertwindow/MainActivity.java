@@ -1,9 +1,11 @@
 package innovativepocket.com.systemalertwindow;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,6 +15,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,6 +34,33 @@ public class MainActivity extends AppCompatActivity {
         tvValue = (TextView) findViewById(R.id.tvValue);
         Button btnStartService = (Button) findViewById(R.id.btnStartService);
         Button btnClose = (Button) findViewById(R.id.btnClose);
+
+
+
+
+
+
+        final ScreenActionReceiver screenactionreceiver = new ScreenActionReceiver();
+
+        registerReceiver(screenactionreceiver, screenactionreceiver.getFilter());
+
+
+
+        /* todo uygulamayı full çalıştırıyor arkada
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            String packageName = this.getPackageName();
+            PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                Intent intent = new Intent();
+                intent.setAction(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
+                intent.setData(Uri.parse("package:" + packageName));
+                this.startActivity(intent);
+            }
+        }*/
+
+
+
 
         edt1.addTextChangedListener(new TextWatcher() {
             @Override
