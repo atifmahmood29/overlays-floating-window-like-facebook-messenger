@@ -1,6 +1,7 @@
 package innovativepocket.com.systemalertwindow;
 
 import android.os.Build;
+import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 import android.app.Service;
 import android.content.Context;
@@ -59,8 +60,8 @@ public class FloatingWindow extends Service {
     WindowManager.LayoutParams mWindowsParams;
     private void moveView() {
         DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
-        int width = (int) (metrics.widthPixels * 0.7f);
-        int height = (int) (metrics.heightPixels * 0.45f);
+        int width = (int) (metrics.widthPixels * 1f);
+        int height = (int) (metrics.heightPixels * 1f);
 
         mWindowsParams = new WindowManager.LayoutParams(
                 width,//WindowManager.LayoutParams.WRAP_CONTENT,
@@ -71,7 +72,12 @@ public class FloatingWindow extends Service {
                 ,
             
                 //WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH, // Not displaying keyboard on bg activity's EditText
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN // Not displaying keyboard on bg activity's EditText
+                        | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                        | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+                        | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                        | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON,
                 //WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, //Not work with EditText on keyboard
                 PixelFormat.TRANSLUCENT);
 
